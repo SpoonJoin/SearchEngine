@@ -1,10 +1,10 @@
 server:
-  port: 8080
+  port: 8081
 
 spring:
   datasource:
     username: root
-    password: 123qweasd!@#QWEASD
+    password: password
     url: jdbc:mysql://localhost:3306/search_engine?useSSL=false&requireSSL=false&allowPublicKeyRetrieval=true
   jpa:
     properties:
@@ -16,9 +16,11 @@ spring:
 
 indexing-settings:
   sites:
-    - url: https://www.lenta.ru
-      name: Лента.ру
-    - url: https://www.skillbox.ru
-      name: Skillbox
-    - url: https://www.playback.ru
-      name: PlayBack.Ru
+    - url: https://ipfran.ru/
+      name: ИПФ РАН
+    - url: https://dombulgakova.ru/
+      name: Булгаковский Дом
+
+fake-params:
+  useragent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36 (compatible; YandexMedianaBot/1.0; +http://yandex.com/bots)
+  referrer: https://www.google.com

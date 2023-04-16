@@ -1,15 +1,18 @@
 package searchengine.model;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "page")
 @Getter
 @Setter
+@EqualsAndHashCode
+@ToString
 @NoArgsConstructor
 public class Page {
     @Id
@@ -24,6 +27,16 @@ public class Page {
     private int code;
     @Column(columnDefinition = "MEDIUMTEXT NOT NULL")
     private String content;
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     private Site site;
+
+//    @EqualsAndHashCode.Exclude
+//    @ToString.Exclude
+//    @ManyToMany(cascade = CascadeType.ALL)
+//    @JoinTable(name = "index_tab",
+//            joinColumns = {@JoinColumn(name = "page_id", nullable = false)},
+//            inverseJoinColumns = {@JoinColumn(name = "lemma_id", nullable = false)})
+//    private List<Lemma> lemmas;
 }

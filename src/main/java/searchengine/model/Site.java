@@ -1,8 +1,6 @@
 package searchengine.model;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -12,6 +10,8 @@ import java.util.Set;
 @Table(name = "site")
 @Getter
 @Setter
+@EqualsAndHashCode
+@ToString
 @NoArgsConstructor
 public class Site {
     @Id
@@ -29,6 +29,8 @@ public class Site {
     private String url;
     @Column(columnDefinition = "VARCHAR(255) NOT NULL")
     private String name;
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "site_id")
     private Set<Page> pages;

@@ -16,10 +16,10 @@ spring:
 
 indexing-settings:
   sites:
-    - url: https://nikoartgallery.com/
-      name: Nicoartgalery
-    - url: https://et-cetera.ru/mobile/
-      name: Et Cetera
+    - url: https://volochek.life
+      name: volochek.life
+    - url: https://et-cetera.ru
+      name: et-cetera.ru
 
 fake-user:
   useragent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36 (compatible; YandexMedianaBot/1.0; +http://yandex.com/bots)

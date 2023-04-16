@@ -1,6 +1,7 @@
 package searchengine.controllers;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import searchengine.dto.indexing.IndexingResponse;
 import searchengine.dto.statistics.StatisticsResponse;
 import searchengine.services.IndexingService;
+import searchengine.services.RequestStatus;
 import searchengine.services.StatisticsService;
 
 @RestController
@@ -24,17 +26,17 @@ public class ApiController {
     }
 
     @GetMapping("/startIndexing")
-    public ResponseEntity<IndexingResponse> startIndexing() {
-        return ResponseEntity.ok(indexingService.startIndexing());
+    public ResponseEntity<?> startIndexing() {
+        return new ResponseEntity<>(indexingService.startIndexing(), RequestStatus.getStatus());
     }
 
     @GetMapping("/stopIndexing")
-    public ResponseEntity<IndexingResponse> stopIndexing() {
-        return ResponseEntity.ok(indexingService.stopIndexing());
+    public ResponseEntity<?> stopIndexing() {
+        return new ResponseEntity<>(indexingService.stopIndexing(), RequestStatus.getStatus());
     }
 
     @PostMapping("/indexPage")
-    public ResponseEntity<IndexingResponse> indexPage(String url) {
-        return ResponseEntity.ok(indexingService.indexPage(url));
+    public ResponseEntity<?> indexPage(String url) {
+        return new ResponseEntity<>(indexingService.indexPage(url), RequestStatus.getStatus());
     }
 }

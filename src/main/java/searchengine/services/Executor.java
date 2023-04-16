@@ -33,6 +33,7 @@ public class Executor extends RecursiveAction {
     private Site site;
     private FakeUser fakeUser;
     public static boolean isActive = true;
+    StatisticsService statisticsService;
     private static CopyOnWriteArraySet<String> allLinks = new CopyOnWriteArraySet<>();
 
     public Executor(String url, Site site, FakeUser fakeUser,
@@ -74,10 +75,14 @@ public class Executor extends RecursiveAction {
                     page.setSiteId(site.getId());
                     page.setContent(doc.html());
                     page.setCode(response.statusCode());
+
                     Executor ex = new Executor(page.getPath(), site, fakeUser,
                             pageRepository, siteRepository, lemmaRepository, indexRepository);
 
                     Lemmatizator lemmatizator = new Lemmatizator();
+                    if (connection.response().statusCode() >= 400) {
+                        RequestStatus.setStatus(connection.response().statusCode());
+                    }
                     if (isActive) {
                         ex.fork();
                         subTask.add(ex);
@@ -97,7 +102,7 @@ public class Executor extends RecursiveAction {
     private void addPageToDB (Page page, Logger logger)
     {
         synchronized (allLinks) {
-            if (!allLinks.contains(page.getPath())) {
+            if (!allLinks.contains(page.getPath()) && page.getCode() < 400) {
                 pageRepository.save(page);
                 logger.info("SITE: " + page.getSite().getName() + " page: " + page.getPath());
                 allLinks.add(page.getPath());
@@ -108,8 +113,7 @@ public class Executor extends RecursiveAction {
             s.setStatusTime(LocalDateTime.now());
             if (page.getCode() >= 400) {
                 s.setStatus(Status.FAILED);
-                s.setLastError("Ошибка " + page.getCode() + " : \nID: " +
-                        page.getId() + "\nPATH: " + page.getPath());
+                s.setLastError("Ошибка " + page.getCode());
             }
             siteRepository.save(s);
         }
@@ -119,20 +123,20 @@ public class Executor extends RecursiveAction {
         for (Map.Entry<String, Integer> entry : lemmas.entrySet()) {
             String lemma = entry.getKey();
             int count = entry.getValue();
-            Lemma lem;
-            if (lemmaRepository.findByLemma(lemma) == null) {
-                lem = new Lemma();
-                lem.setLemma(lemma);
-                lem.setFrequency(1);
-                lem.setSiteId(site.getId());
-            } else {
-                lem = lemmaRepository.findByLemma(lemma);
-                lem.setFrequency(lem.getFrequency() + 1);
-            }
             synchronized (lemmaRepository) {
+                Lemma lem;
+                if (lemmaRepository.findByLemma(lemma) == null) {
+                    lem = new Lemma();
+                    lem.setLemma(lemma);
+                    lem.setFrequency(1);
+                    lem.setSiteId(site.getId());
+                } else {
+                    lem = lemmaRepository.findByLemma(lemma);
+                    lem.setFrequency(lem.getFrequency() + 1);
+                }
                 lemmaRepository.save(lem);
+                addToIndex(lem, count, page);
             }
-            addToIndex(lem, count, page);
         }
     }
 

@@ -1,6 +1,11 @@
 package searchengine.services;
 
 import lombok.RequiredArgsConstructor;
+import org.jsoup.Connection;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import searchengine.config.Site;
 import searchengine.config.SitesList;
@@ -8,7 +13,13 @@ import searchengine.dto.statistics.DetailedStatisticsItem;
 import searchengine.dto.statistics.StatisticsData;
 import searchengine.dto.statistics.StatisticsResponse;
 import searchengine.dto.statistics.TotalStatistics;
+import searchengine.repositories.LemmaRepository;
+import searchengine.repositories.PageRepository;
+import searchengine.repositories.SiteRepository;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -16,7 +27,12 @@ import java.util.Random;
 @Service
 @RequiredArgsConstructor
 public class StatisticsServiceImpl implements StatisticsService {
-
+    @Autowired
+    private SiteRepository siteRepository;
+    @Autowired
+    private PageRepository pageRepository;
+    @Autowired
+    private LemmaRepository lemmaRepository;
     private final Random random = new Random();
     private final SitesList sites;
 
@@ -40,19 +56,37 @@ public class StatisticsServiceImpl implements StatisticsService {
             DetailedStatisticsItem item = new DetailedStatisticsItem();
             item.setName(site.getName());
             item.setUrl(site.getUrl());
-            int pages = random.nextInt(1_000);
-            int lemmas = pages * random.nextInt(1_000);
+
+            int pages = pageRepository.findAll().size();
+            int lemmas = lemmaRepository.findAll().size();
             item.setPages(pages);
             item.setLemmas(lemmas);
-            item.setStatus(statuses[i % 3]);
-            item.setError(errors[i % 3]);
-            item.setStatusTime(System.currentTimeMillis() -
-                    (random.nextInt(10_000)));
+
+            if (siteRepository.findAll().isEmpty() ||
+                    siteRepository.findByName(site.getName()) == null) {
+                item.setStatus(statuses[2]);
+                item.setError(errors[2]);
+            } else if (siteRepository.findByName(site.getName()).getStatus().equals("INDEXED")) {
+                item.setStatus(statuses[0]);
+            } else if (siteRepository.findByName(site.getName()).getStatus().equals("FAILED")) {
+                if (pageRepository.findByPath(site.getUrl()).getCode() == 403) {
+                    item.setStatus(statuses[1]);
+                    item.setError(errors[1]);
+                } else if (pageRepository.findByPath(site.getUrl()).getCode() == 404) {
+                    item.setStatus(statuses[1]);
+                    item.setError(errors[0]);
+                }
+            } else {
+                item.setStatus(statuses[2]);
+                item.setError(errors[2]);
+            }
+            ZonedDateTime zdt = ZonedDateTime.of(LocalDateTime.now(), ZoneId.systemDefault());
+            long date = zdt.toInstant().toEpochMilli();
+            item.setStatusTime(date);
             total.setPages(total.getPages() + pages);
             total.setLemmas(total.getLemmas() + lemmas);
             detailed.add(item);
         }
-
         StatisticsResponse response = new StatisticsResponse();
         StatisticsData data = new StatisticsData();
         data.setTotal(total);

@@ -1,5 +1,6 @@
 package searchengine.services;
 
+import org.springframework.http.HttpStatus;
 import searchengine.dto.indexing.IndexingResponse;
 
 public interface IndexingService {

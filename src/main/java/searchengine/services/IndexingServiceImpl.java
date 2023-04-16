@@ -5,6 +5,7 @@ import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import searchengine.config.FakeUser;
 import searchengine.config.Site;
@@ -49,6 +50,7 @@ public class IndexingServiceImpl implements IndexingService {
     public IndexingResponse startIndexing() {
         IndexingResponse response;
         if (!siteRepository.findByStatus(Status.INDEXING).isEmpty()) {
+            RequestStatus.setStatus(HttpStatus.BAD_REQUEST.value());
             response = new FalseIndexingResponse("Индексация уже запущена");
             return response;
         }
@@ -79,6 +81,7 @@ public class IndexingServiceImpl implements IndexingService {
             t.start();
             activeThreads.add(t);
         }
+        RequestStatus.setStatus(HttpStatus.OK.value());
         response = new TrueIndexingResponse();
         return response;
     }
@@ -87,6 +90,7 @@ public class IndexingServiceImpl implements IndexingService {
     public IndexingResponse stopIndexing() {
         IndexingResponse response;
         if (siteRepository.findByStatus(Status.INDEXING).isEmpty()) {
+            RequestStatus.setStatus(HttpStatus.BAD_REQUEST.value());
             response = new FalseIndexingResponse("Индексация не запущена");
             return response;
         }
@@ -103,6 +107,7 @@ public class IndexingServiceImpl implements IndexingService {
                 siteRepository.save(s);
             });
         }
+        RequestStatus.setStatus(HttpStatus.OK.value());
         response = new TrueIndexingResponse();
         return response;
     }
@@ -114,6 +119,7 @@ public class IndexingServiceImpl implements IndexingService {
             response = new FalseIndexingResponse("Данная страница " +
                     "находится за пределами сайтов, " +
                     "указанных в конфигурационном файле");
+            RequestStatus.setStatus(HttpStatus.BAD_REQUEST.value());
             return response;
         }
         Lemmatizator lemmatizator = new Lemmatizator();
@@ -124,6 +130,7 @@ public class IndexingServiceImpl implements IndexingService {
             HashMap<String, Integer> lemmas = lemmatizator.createLemmas(html);
             addPageToDb(html, url, connection, lemmas);
             addLemmasToDb(lemmas, url);
+            RequestStatus.setStatus(connection.response().statusCode());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -148,9 +155,6 @@ public class IndexingServiceImpl implements IndexingService {
         for (Site s : sitesList.getSites()) {
             if (s.getUrl().equals(getSiteUrl(uri))) {
                 Connection.Response response = connection.response();
-                if (response.statusCode() >= 400) {
-                    continue;
-                }
                 searchengine.model.Site site = getSite(s);
                 Page p = pageRepository.findByPath(uri);
                 if (p != null) {
@@ -166,9 +170,9 @@ public class IndexingServiceImpl implements IndexingService {
                 page.setPath(uri);
                 page.setSite(site);
                 page.setCode(response.statusCode());
+                RequestStatus.setStatus(response.statusCode());
                 page.setSiteId(site.getId());
                 page.setContent(html);
-                System.out.println("Страница создана!");
                 pageRepository.save(page);
             }
         }

@@ -26,11 +26,4 @@ public class Index {
     private Lemma lemma;
     @Column(columnDefinition = "FLOAT NOT NULL", name = "index_rank")
     private float rank;
-
-//    @Column(columnDefinition = "INT NOT NULL", name = "page_id",
-//            insertable = false, updatable = false)
-//    private int pageId;
-//    @Column(columnDefinition = "INT NOT NULL", name = "lemma_id",
-//            insertable = false, updatable = false)
-//    private int lemmaId;
 }

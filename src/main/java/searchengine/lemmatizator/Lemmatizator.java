@@ -35,6 +35,16 @@ public class Lemmatizator {
         return lemmas;
     }
 
+    public List<String> getLemmasOfWord(String word) {
+        LuceneMorphology luceneMorph;
+        try {
+            luceneMorph = new RussianLuceneMorphology();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return luceneMorph.getNormalForms(word);
+    }
+
     private List<String> getWordsBaseForms(String[] words) throws IOException {
         LuceneMorphology luceneMorph = new RussianLuceneMorphology();
         List<String> baseForms = new ArrayList<>(Arrays.asList(words));

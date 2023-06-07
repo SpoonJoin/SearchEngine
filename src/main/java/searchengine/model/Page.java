@@ -31,12 +31,4 @@ public class Page {
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     private Site site;
-
-//    @EqualsAndHashCode.Exclude
-//    @ToString.Exclude
-//    @ManyToMany(cascade = CascadeType.ALL)
-//    @JoinTable(name = "index_tab",
-//            joinColumns = {@JoinColumn(name = "page_id", nullable = false)},
-//            inverseJoinColumns = {@JoinColumn(name = "lemma_id", nullable = false)})
-//    private List<Lemma> lemmas;
 }

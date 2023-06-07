@@ -10,5 +10,6 @@ import java.util.List;
 @Repository
 public interface SiteRepository extends JpaRepository<Site, Integer> {
     Site findByName (String name);
+    Site findByUrl (String url);
     List<Site> findByStatus (Status status);
 }

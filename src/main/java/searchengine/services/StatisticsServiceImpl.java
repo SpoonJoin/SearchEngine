@@ -13,6 +13,7 @@ import searchengine.dto.statistics.DetailedStatisticsItem;
 import searchengine.dto.statistics.StatisticsData;
 import searchengine.dto.statistics.StatisticsResponse;
 import searchengine.dto.statistics.TotalStatistics;
+import searchengine.model.Status;
 import searchengine.repositories.LemmaRepository;
 import searchengine.repositories.PageRepository;
 import searchengine.repositories.SiteRepository;
@@ -56,9 +57,16 @@ public class StatisticsServiceImpl implements StatisticsService {
             DetailedStatisticsItem item = new DetailedStatisticsItem();
             item.setName(site.getName());
             item.setUrl(site.getUrl());
-
-            int pages = pageRepository.findAll().size();
-            int lemmas = lemmaRepository.findAll().size();
+            int pages;
+            int lemmas;
+            if (!siteRepository.findAll().isEmpty()) {
+                searchengine.model.Site s = siteRepository.findByName(site.getName());
+                pages = pageRepository.findBySiteId(s.getId()).size();
+                lemmas = lemmaRepository.findBySiteId(s.getId()).size();
+            } else {
+                pages = 0;
+                lemmas = 0;
+            }
             item.setPages(pages);
             item.setLemmas(lemmas);
 
@@ -66,16 +74,17 @@ public class StatisticsServiceImpl implements StatisticsService {
                     siteRepository.findByName(site.getName()) == null) {
                 item.setStatus(statuses[2]);
                 item.setError(errors[2]);
-            } else if (siteRepository.findByName(site.getName()).getStatus().equals("INDEXED")) {
+            } else if (siteRepository.findByName(site.getName()).getStatus().equals(Status.INDEXED)) {
                 item.setStatus(statuses[0]);
-            } else if (siteRepository.findByName(site.getName()).getStatus().equals("FAILED")) {
-                if (pageRepository.findByPath(site.getUrl()).getCode() == 403) {
-                    item.setStatus(statuses[1]);
-                    item.setError(errors[1]);
-                } else if (pageRepository.findByPath(site.getUrl()).getCode() == 404) {
-                    item.setStatus(statuses[1]);
+            } else if (siteRepository.findByName(site.getName()).getStatus().equals(Status.FAILED)) {
+                if (pageRepository.findByPath(site.getUrl()) == null) {
+                    item.setError(errors[2]);
+                } else if (pageRepository.findByPath(site.getUrl()).getCode() == 404) {;
                     item.setError(errors[0]);
+                } else if (pageRepository.findByPath(site.getUrl()).getCode() == 403) {
+                    item.setError(errors[1]);
                 }
+                item.setStatus(statuses[1]);
             } else {
                 item.setStatus(statuses[2]);
                 item.setError(errors[2]);

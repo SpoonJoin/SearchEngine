@@ -117,7 +117,7 @@ public class IndexingServiceImpl implements IndexingService {
         IndexingResponse response;
         if (!checkConfigurationSites(url)) {
             response = new FalseIndexingResponse("Данная страница " +
-                    "находится за пределами сайтов, " +
+                    "находится за <b>пределами сайтов</b>, " +
                     "указанных в конфигурационном файле");
             RequestStatus.setStatus(HttpStatus.BAD_REQUEST.value());
             return response;

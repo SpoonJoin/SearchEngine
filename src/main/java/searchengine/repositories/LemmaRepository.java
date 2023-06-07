@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface LemmaRepository extends JpaRepository<Lemma, Integer> {
     Lemma findByLemma (String lemma);
-
+    List<Lemma> findBySiteId (int siteId);
 }

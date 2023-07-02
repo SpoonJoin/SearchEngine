@@ -61,7 +61,7 @@ public class SearchServiceImpl implements SearchService {
             lemmas.addAll(lemmatizator.getLemmasOfWord(s));
         }
         LinkedHashMap<String, Integer> sortedMap = getSortedMap(lemmas);
-
+        if (sortedMap.isEmpty()) System.out.println("ПУСТАЯ МАПА!");
         for (Map.Entry<String, Integer> entry : sortedMap.entrySet()) {
             String lemma = entry.getKey();
             int frequency = entry.getValue();
@@ -93,7 +93,8 @@ public class SearchServiceImpl implements SearchService {
     private LinkedHashMap<String, Integer> getSortedMap(Set<String> queryLemmas) {
         Map<String, Integer> map = new HashMap<>();
         for (String queryLemma : queryLemmas) {
-            for (Lemma repLemma : lemmaRepository.findAll()) {
+            List<Lemma> lemmaList = lemmaRepository.findAll();
+            for (Lemma repLemma : lemmaList) {
                 if (repLemma.getLemma().equals(queryLemma)) {
                     map.put(repLemma.getLemma(), repLemma.getFrequency());
                 }
@@ -123,17 +124,36 @@ public class SearchServiceImpl implements SearchService {
             Document document = Jsoup.connect(page).get();
             Elements e = document.select("body");
             String s = e.text();
-            for (Element element : e) {
-                String[] str = element.text().split("\\s+");
-                List<String> list = new ArrayList<>(Arrays.asList(str));
-                if (list.contains(lemma)) {
-                    builder.append("... ");
-                    list.forEach(w -> builder.append(lemmatizator.getLemmasOfWord(w).contains(lemma) ?
-                            ("<b>" + w + "</b> ") :
-                            (w + " ")));
-                    builder.append("... ");
+            int startIndex = s.indexOf(lemma);
+            int endIndex = s.lastIndexOf(lemma);
+            if (startIndex > 40) {
+                builder.append("...");
+                s = s.substring(startIndex - 40);
+                while (!s.startsWith(" ")) {
+                    s = s.substring(1);
                 }
             }
+            builder.append(s.substring(0, startIndex)).append("<b>").append(lemma).append("</b>");
+            if (endIndex > 40) {
+                s = s.substring(0, s.length() - 40);
+                while (!s.endsWith(" ")) {
+                    s = s.substring(0, s.length() - 1);
+                }
+                builder.append(s.substring(endIndex)).append("...");
+            } else {
+                builder.append(s.substring(endIndex));
+            }
+//            for (Element element : e) {
+//                String[] str = element.text().split("\\s+");
+//                List<String> list = new ArrayList<>(Arrays.asList(str));
+//                if (list.contains(lemma)) {
+//                    builder.append("... ");
+//                    list.forEach(w -> builder.append(lemmatizator.getLemmasOfWord(w).contains(lemma) ?
+//                            ("<b>" + w + "</b> ") :
+//                            (w + " ")));
+//                    builder.append("... ");
+//                }
+//            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

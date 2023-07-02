@@ -55,7 +55,7 @@ public class ApiController {
                 "\nСдвиг: " + offset +
                 "\nКол-во результатов: " + limit);
 
-        if (site.isEmpty()) {
+        if (site == null) {
             return new ResponseEntity<>(searchService.searchAll(query, site, offset, limit),
                     RequestStatus.getStatus());
         }

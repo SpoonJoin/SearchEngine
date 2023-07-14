@@ -48,7 +48,8 @@ public class SearchServiceImpl implements SearchService {
             RequestStatus.setStatus(HttpStatus.BAD_REQUEST.value());
             return new FalseSearchResponse("Указанный сайт не проиндексирован");
         }
-
+        List<Lemma> l = new ArrayList<>();
+        l = lemmaRepository.findAll();
         TrueSearchResponse response = new TrueSearchResponse();
         Data data = new Data();
 
@@ -61,7 +62,10 @@ public class SearchServiceImpl implements SearchService {
             lemmas.addAll(lemmatizator.getLemmasOfWord(s));
         }
         LinkedHashMap<String, Integer> sortedMap = getSortedMap(lemmas);
-        if (sortedMap.isEmpty()) System.out.println("ПУСТАЯ МАПА!");
+
+        if (sortedMap.isEmpty()) System.out.println("ПУСТАЯ МАПА((");
+        else System.out.println("ЗАПОЛНЕННАЯ МАПА, УРА!!");
+
         for (Map.Entry<String, Integer> entry : sortedMap.entrySet()) {
             String lemma = entry.getKey();
             int frequency = entry.getValue();
@@ -93,8 +97,7 @@ public class SearchServiceImpl implements SearchService {
     private LinkedHashMap<String, Integer> getSortedMap(Set<String> queryLemmas) {
         Map<String, Integer> map = new HashMap<>();
         for (String queryLemma : queryLemmas) {
-            List<Lemma> lemmaList = lemmaRepository.findAll();
-            for (Lemma repLemma : lemmaList) {
+            for (Lemma repLemma : lemmaRepository.findAll()) {
                 if (repLemma.getLemma().equals(queryLemma)) {
                     map.put(repLemma.getLemma(), repLemma.getFrequency());
                 }
@@ -124,8 +127,12 @@ public class SearchServiceImpl implements SearchService {
             Document document = Jsoup.connect(page).get();
             Elements e = document.select("body");
             String s = e.text();
+            Set<String> words = lemmatizator.createLemmas(s).keySet();
+            if (!words.contains(lemma)) {
+                return null;
+            }
             int startIndex = s.indexOf(lemma);
-            int endIndex = s.lastIndexOf(lemma);
+            int endIndex = s.indexOf(lemma) + lemma.length();
             if (startIndex > 40) {
                 builder.append("...");
                 s = s.substring(startIndex - 40);
@@ -133,7 +140,7 @@ public class SearchServiceImpl implements SearchService {
                     s = s.substring(1);
                 }
             }
-            builder.append(s.substring(0, startIndex)).append("<b>").append(lemma).append("</b>");
+            builder.append(s, 0, startIndex).append("<b>").append(lemma).append("</b>");
             if (endIndex > 40) {
                 s = s.substring(0, s.length() - 40);
                 while (!s.endsWith(" ")) {
@@ -143,17 +150,6 @@ public class SearchServiceImpl implements SearchService {
             } else {
                 builder.append(s.substring(endIndex));
             }
-//            for (Element element : e) {
-//                String[] str = element.text().split("\\s+");
-//                List<String> list = new ArrayList<>(Arrays.asList(str));
-//                if (list.contains(lemma)) {
-//                    builder.append("... ");
-//                    list.forEach(w -> builder.append(lemmatizator.getLemmasOfWord(w).contains(lemma) ?
-//                            ("<b>" + w + "</b> ") :
-//                            (w + " ")));
-//                    builder.append("... ");
-//                }
-//            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

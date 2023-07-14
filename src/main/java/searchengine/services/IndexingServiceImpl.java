@@ -203,7 +203,8 @@ public class IndexingServiceImpl implements IndexingService {
                 lem.setFrequency(1);
                 searchengine.model.Site site =
                         siteRepository.findByName(getSiteName(uri));
-                lem.setSiteId(site.getId());
+                lem.setSite(site);
+                //lem.setSiteId(site.getId());
             } else {
                 lem = lemmaRepository.findByLemma(lemma);
                 lem.setFrequency(lem.getFrequency() + 1);

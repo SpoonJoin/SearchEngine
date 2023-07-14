@@ -129,7 +129,8 @@ public class Executor extends RecursiveAction {
                     lem = new Lemma();
                     lem.setLemma(lemma);
                     lem.setFrequency(1);
-                    lem.setSiteId(site.getId());
+                    //lem.setSiteId(site.getId());
+                    lem.setSite(site);
                 } else {
                     lem = lemmaRepository.findByLemma(lemma);
                     lem.setFrequency(lem.getFrequency() + 1);

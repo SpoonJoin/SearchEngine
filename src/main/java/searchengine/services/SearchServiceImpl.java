@@ -1,6 +1,7 @@
 package searchengine.services;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -37,7 +38,7 @@ public class SearchServiceImpl implements SearchService {
     private LemmaRepository lemmaRepository;
     @Autowired
     private IndexRepository indexRepository;
-    private static int count = 0;
+    private static int count = 3;
     @Override
     public SearchResponse search(String query, String site, int offset, int limit) {
         if (query.isEmpty() || query.isBlank()) {
@@ -121,28 +122,34 @@ public class SearchServiceImpl implements SearchService {
     }
 
     private String getHTMLSnippet(String page, String lemma) {
-        Lemmatizator lemmatizator = new Lemmatizator();
         StringBuilder builder = new StringBuilder();
         try {
             Document document = Jsoup.connect(page).get();
             Elements e = document.select("body");
             String s = e.text();
-            Set<String> words = lemmatizator.createLemmas(s).keySet();
-            if (!words.contains(lemma)) {
+            if (!s.toLowerCase().contains(lemma.toLowerCase())) {
                 return null;
             }
-            int startIndex = s.indexOf(lemma);
-            int endIndex = s.indexOf(lemma) + lemma.length();
-            if (startIndex > 40) {
+            if (lemma.contains(" ")) {
+                List<String> lemmaWords = Arrays.asList(lemma.split("\\s+"));
+                /**
+                 * код для случаев, когда больше 1 слова в поисковом запросе
+                 */
+            }
+            int lemmaCount = StringUtils.countMatches(s, lemma);
+
+            int startIndex = s.toLowerCase().indexOf(lemma);
+            if (startIndex > 50) {
                 builder.append("...");
-                s = s.substring(startIndex - 40);
+                s = s.substring(startIndex - 50);
                 while (!s.startsWith(" ")) {
                     s = s.substring(1);
                 }
             }
-            builder.append(s, 0, startIndex).append("<b>").append(lemma).append("</b>");
-            if (endIndex > 40) {
-                s = s.substring(0, s.length() - 40);
+            builder.append(s.substring(0, startIndex)).append("<b>").append(lemma).append("</b>");
+            int endIndex = s.toLowerCase().indexOf(lemma) + lemma.length();
+            if ((s.length() - endIndex) > 50) {
+                s = s.substring(0, endIndex + 50);
                 while (!s.endsWith(" ")) {
                     s = s.substring(0, s.length() - 1);
                 }
